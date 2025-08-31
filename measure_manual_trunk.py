@@ -4,29 +4,23 @@ sys.dont_write_bytecode = True
 import cv2
 import numpy as np
 
-# Configure o nome da sua imagem aqui
-IMAGE_FILE = "troncoSemSombra.jpeg"  # <-- Altere para o nome da sua imagem
+IMAGE_FILE = "troncoSemSombra.jpeg"  
 
-# Variáveis globais para os pontos selecionados
 points = []
 img_copy = None
 
 def click_event(event, x, y, flags, param):
     global points, img_copy
     if event == cv2.EVENT_LBUTTONDOWN:
-        # Desenhar um círculo onde o usuário clicou
         cv2.circle(img_copy, (x, y), 3, (0, 0, 255), -1)
         points.append((x, y))
         
-        # Se tiver 2 pontos, desenhar a linha do diâmetro
         if len(points) == 2:
             cv2.line(img_copy, points[0], points[1], (0, 255, 0), 2)
             
-        # Mostrar a imagem atualizada
         cv2.imshow("Image", img_copy)
 
 def try_detect_marker(image):
-    """Tenta detectar o marcador ArUco com diferentes parâmetros"""
     print("\n=== INICIANDO DETECÇÃO DO MARCADOR ===")
     print("Dimensões da imagem de entrada:")
     print(f"- Altura: {image.shape[0]} pixels")
@@ -34,7 +28,6 @@ def try_detect_marker(image):
     print(f"- Canais: {image.shape[2]}")
     print("\nParâmetros do detector:")
     
-    # Tentar diferentes parâmetros de threshold
     parameters = cv2.aruco.DetectorParameters()
     parameters.adaptiveThreshWinSizeMin = 3
     parameters.adaptiveThreshWinSizeMax = 23
@@ -60,7 +53,6 @@ def try_detect_marker(image):
             for j, point in enumerate(corners_array):
                 print(f"  Canto {j+1}: ({point[0]:.1f}, {point[1]:.1f})")
             
-            # Calcular dimensões do marcador
             width = np.linalg.norm(corners_array[0] - corners_array[1])
             height = np.linalg.norm(corners_array[1] - corners_array[2])
             print(f"- Largura em pixels: {width:.1f}")
@@ -88,7 +80,6 @@ def main():
         print(f"Erro: Não foi possível carregar a imagem {IMAGE_FILE}")
         sys.exit(1)
 
-    # Mostrar dimensões originais
     height, width = img.shape[:2]
     print("\nDimensões da imagem:")
     print(f"- Largura original: {width} pixels")
@@ -96,7 +87,6 @@ def main():
     print(f"- Resolução: {width * height} pixels")
     print(f"- Proporção: {width/height:.2f}")
 
-    # Redimensionar se a imagem for muito grande
     max_dimension = 1200
     scale = 1.0
     if width > max_dimension or height > max_dimension:
@@ -112,10 +102,8 @@ def main():
         print(f"- Fator de escala: {scale:.3f}")
         print(f"- Redução de tamanho: {100 - (scale * 100):.1f}%")
 
-    # Fazer uma cópia para desenhar
     img_copy = img.copy()
 
-    # Tentar detectar o marcador
     corners, ids = try_detect_marker(img)
     
     pixel_cm_ratio = None
@@ -126,11 +114,9 @@ def main():
         if ids is not None:
             print(f"ID do marcador: {ids[0][0]}")
         
-        # Desenhar o contorno do marcador
         int_corners = np.int32(corners)
         cv2.polylines(img_copy, int_corners, True, (0, 255, 0), 2)
         
-        # Análise detalhada do marcador
         corners_array = corners[0][0]
         width_pixels = np.linalg.norm(corners_array[0] - corners_array[1])
         height_pixels = np.linalg.norm(corners_array[1] - corners_array[2])
@@ -157,7 +143,6 @@ def main():
         pixel_cm_ratio = float(input("Digite quantos pixels equivalem a essa medida: "))
         pixel_cm_ratio = pixel_cm_ratio / ref_cm
 
-    # Configurar janela e mouse callback
     cv2.namedWindow("Image")
     cv2.setMouseCallback("Image", click_event)
 
@@ -171,21 +156,18 @@ def main():
         cv2.imshow("Image", img_copy)
         key = cv2.waitKey(1) & 0xFF
         
-        # Pressione 'r' para resetar
         if key == ord('r'):
             points.clear()
             img_copy = img.copy()
             if corners and len(corners) > 0:
                 cv2.polylines(img_copy, int_corners, True, (0, 255, 0), 2)
         
-        # Pressione 's' para salvar
         elif key == ord('s'):
             if len(points) == 2:
                 print("\n=== CÁLCULO DO DIÂMETRO ===")
-                # Calcular distância em pixels
                 dist_pixels = np.sqrt((points[1][0] - points[0][0])**2 + 
                                     (points[1][1] - points[0][1])**2)
-                # Converter para centímetros
+
                 dist_cm = dist_pixels / pixel_cm_ratio
                 
                 print("\nPontos selecionados:")
@@ -205,21 +187,18 @@ def main():
                 print("Se você medir com fita métrica ao redor do tronco,")
                 print(f"deve obter aproximadamente {circumference:.1f} cm")
                 
-                # Desenhar a medida
                 mid_point = ((points[0][0] + points[1][0])//2, 
                            (points[0][1] + points[1][1])//2)
                 cv2.putText(img_copy, f"Diametro: {dist_cm:.1f} cm", 
                           (mid_point[0]-100, mid_point[1]-20),
                           cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 
-                # Salvar imagem
                 output_filename = "medidas_" + IMAGE_FILE
                 cv2.imwrite(output_filename, img_copy)
                 print(f"\nArquivo de saída:")
                 print(f"- Nome: {output_filename}")
                 print("=== FIM DO PROCESSAMENTO ===")
         
-        # Pressione 'q' para sair
         elif key == ord('q'):
             break
 
