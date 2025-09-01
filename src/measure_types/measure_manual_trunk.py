@@ -59,7 +59,6 @@ def try_detect_marker(image):
             print(f"- Altura em pixels: {height:.1f}")
             print(f"- Área em pixels²: {width * height:.1f}")
             
-            # Calcular perímetro
             perimeter = cv2.arcLength(corner, True)
             print(f"- Perímetro em pixels: {perimeter:.1f}")
     else:
@@ -71,7 +70,6 @@ def try_detect_marker(image):
 def main():
     global img_copy
     
-    # Carregar imagem
     print("\n=== INICIANDO PROCESSAMENTO ===")
     print(f"Arquivo de entrada: {IMAGE_FILE}")
     
@@ -126,7 +124,6 @@ def main():
         print(f"- Altura em pixels: {height_pixels:.1f}")
         print(f"- Proporção do marcador: {width_pixels/height_pixels:.2f}")
         
-        # Calcular a razão pixel/cm (perímetro = 94cm (23.5cm * 4))
         aruco_perimeter = cv2.arcLength(corners[0], True)
         pixel_cm_ratio = aruco_perimeter / 94
         
